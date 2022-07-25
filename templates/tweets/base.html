@@ -11,8 +11,12 @@
     <title>{% block head_title %} {% endblock head_title %}</title>
   </head>
   <body>
-    {% block content %}
-    {% endblock content %}
+
+    {% include "components/navbar.html" %}
+    <div class="containe">
+      {% block content %}
+      {% endblock content %}
+    </div>
     <!-- Optional JavaScript; choose one of the two! -->
 
     <!-- Option 1: Bootstrap Bundle with Popper -->
