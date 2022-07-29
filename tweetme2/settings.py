@@ -27,18 +27,22 @@ SECRET_KEY = 'django-insecure-h5$g=$fyu&e1-%i2x^b@w6w@whsi(3&+!#h-c7su$7qz1j*@qx
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', '.mydomain.com']
-
+LOGIN_URL = "/login"
+MAX_TWEET_LENGTH = 240
 
 # Application definition
 
 INSTALLED_APPS = [
-    'tweets',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #Third-party
+    'rest_framework',
+    #internal
+    'tweets',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +130,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+DEFAULT_RENDERER_CLASSES = [
+    "rest_framework.renderers.JSONRenderer",
+]
+
+if DEBUG:
+    DEFAULT_RENDERER_CLASSES += [
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        'rest_framework.authentication.SessionAuthentication',
+        ],
+    "DEFAULT_RENDERER_CLASSES": DEFAULT_RENDERER_CLASSES
+}
