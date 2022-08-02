@@ -8,7 +8,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from tweetme2.settings import ALLOWED_HOSTS
 from .models import Tweet
 from .forms import TweetForm
-from .serializers import TweetSerializer
+from .serializers import TweetSerializer, TweetActionSerializer, TweetCreateSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
@@ -48,7 +48,7 @@ def tweet_list_view_django(request, *args, **kwargs):
 @permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication])
 def tweet_create_view(request, *args, **kwargs): 
-    serializer = TweetSerializer(data = request.POST)
+    serializer = TweetCreateSerializer(data = request.POST)
     if serializer.is_valid(raise_exception=True):
         serializer.save(user = request.user)
         return Response(serializer.data, status = 201)
@@ -80,6 +80,42 @@ def tweet_delete_view(request, tweet_id, *args, **kwargs):
         return Response({"message":"You cannot delete this tweet"}, status = 401)
     obj = qs.first()
     obj.delete()
+    return Response({"message":"Tweet Removed"}, status = 200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def tweet_action_view(request, *args, **kwargs):
+    # Action options are: like, unline, retweet. ID is required.
+    serializer = TweetActionSerializer(data = request.data)
+    if serializer.is_valid(raise_exception=True):
+        data = serializer.validated_data
+        tweet_id = data.get("id")
+        action = data.get("action")
+        content = data.get("content")
+        qs = Tweet.objects.filter(id=tweet_id)
+        if not qs.exists():
+            Return({}, status = 404) 
+        obj = qs.first()
+        if action == "like": 
+            obj.likes.add(request.user)
+            serializer = TweetSerializer(obj)
+            return Response(serializer.data, status = 200)
+        elif action == "unlike":
+            obj.likes.remove(request.user)
+            serializer = TweetSerializer(obj)
+            return Response(serializer.data, status = 200)
+        elif action == "retweet":
+            new_tweet = Tweet.objects.create(
+                user=request.user, 
+                parent=obj,
+                content=content
+                )
+            print(new_tweet)
+            serializer = TweetSerializer(new_tweet)
+            return Response(serializer.data, status = 201)
+
+
     return Response({"message":"Tweet Removed"}, status = 200)
 
 def tweet_create_view_pure_django(request, *args, **kwargs): 
